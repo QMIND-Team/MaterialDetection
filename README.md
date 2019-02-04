@@ -4,3 +4,9 @@ The user will have to update train_loc and test_loc with the file path to the tr
 The reduced data set is available through Google Drive at:
 https://drive.google.com/open?id=1noWuyV50Dkw_O_af8NqaAWxrKCyje8H6.
 It should already be in the correct format, so just download it.
+
+VGG_demo.py:
+Holds a pretrained VGG16 network that can be used to classify an object, edit line 11 with desired directory
+
+VGG_try1.py:
+1st attempt at a fine tuned VGG16 network, froze all convolutional weights and only working with the dense layer on top
