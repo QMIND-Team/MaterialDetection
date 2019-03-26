@@ -1,13 +1,17 @@
-from keras.preprocessing.image import ImageDataGenerator
+# =============================================================================
+from keras.preprocessing.image import load_img, ImageDataGenerator
+from keras.preprocessing.image import img_to_array
+from keras import optimizers
+# from keras.applications.vgg16 import preprocess_input
+# from keras.applications.vgg16 import decode_predictions
+# =============================================================================
 from keras.applications.vgg16 import VGG16
 from keras import models
 from keras import layers
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, TensorBoard
-# load the model
 
 # Hey Leon! You're going to have to tweak a couple of things really quick before running this
 # Throw in the path directory to the materials file I sent you:
-
 train_loc = "C:\\Users\\marcu\\learning\\mats\\train"
 test_loc = "C:\\Users\\marcu\\learning\\mats\\test"
 my_base = VGG16(weights='imagenet',include_top = False, input_shape = (224,224,3))
@@ -17,7 +21,7 @@ model.add(my_base)
 model.add(layers.Flatten())
 model.add(layers.Dense(256, activation = 'relu'))
 model.add(layers.Dense(128, activation = 'relu'))
-model.add(layers.Dense(5,activation = 'softmax'))
+model.add(layers.Dense(1,activation = 'sigmoid'))
 
 train_datagen = ImageDataGenerator(
         rescale = 1./255,
@@ -29,45 +33,35 @@ train_datagen = ImageDataGenerator(
         horizontal_flip = True,
         fill_mode = 'nearest'
         )
-
 test_datagen = ImageDataGenerator(rescale=1./255)
-
 train_generator = train_datagen.flow_from_directory(
         train_loc,
         target_size = (224,224),
         batch_size=20,
-        class_mode='categorical'
+        class_mode='binary'
         )
 
 valid_generator = test_datagen.flow_from_directory(
         test_loc,
         target_size = (224,224),
         batch_size = 20,
-        class_mode = 'categorical')
+        class_mode = 'binary')
 
-model.compile(loss = 'categorical_crossentropy',
-              optimizer = 'rmsprop',
+model.compile(loss = 'binary_crossentropy',
+              optimizer = optimizers.RMSprop(lr=1e-4),
               metrics = ['accuracy'])
 
-callbacks = [EarlyStopping(monitor='val_loss',
-                           patience=8,
-                           verbose=1,
-                           min_delta=1e-4),
-             ReduceLROnPlateau(monitor='val_loss',
-                               factor=0.1,
-                               patience=4,
-                               verbose=1,
-                               epsilon=1e-4),
-             ModelCheckpoint(monitor='val_loss',
-                             filepath='modelWeights/best_weights_VGG16.hdf5',
-                             save_best_only=True,
-                             save_weights_only=True),
-             TensorBoard(log_dir='logs')]
 
 history = model.fit_generator(
         train_generator,
         steps_per_epoch = 100,
-        epochs = 5,
+        epochs = 100,
         validation_data = valid_generator,
-        callbacks = callbacks,
         validation_steps = 50)
+
+model_json = model.to_json()
+with open("model.json", "w") as json_file:
+    json_file.write(model_json)
+# serialize weights to HDF5
+model.save_weights("model_weights.h5")
+print("Saved model to disk")
