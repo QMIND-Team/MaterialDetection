@@ -86,7 +86,6 @@ def showVid():
         if key == 80:  # exit on ESC
             break
         elif key == 27: # press p (80) for picture
-            print("Worked")
             input, raw_image = getPicture(vc)
             results = getPrediction(model, input, decoder)
             if results == 0:
@@ -109,17 +108,3 @@ decoder = getDecode()
 while (True):
     # os.system('clear') #this doesn't work looking for an alternative
     showVid()
-    '''
-    input, raw_image = getPicture()
-    results = getPrediction(model, input, decoder)
-    if results == 0:
-        text = "Black Box"
-    elif results == 1:
-        text = "Blue Box"
-    else:
-        text = "Unknown"
-    cv2.putText(raw_image, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, 255)
-    cv2.imshow('Prediction', raw_image)
-    cv2.waitKey(0)
-    cv2.destroyWindow("Prediction")
-    '''
