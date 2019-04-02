@@ -6,6 +6,9 @@ from keras.applications.vgg16 import VGG16
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+# Our decoder dictionary translates VGG16 category predictions to our categories.
+# This fun'n returns our decoder dictionary.
+# 1 represents blue box items and 0 represents black box items.
 def getDecode():
     decoder = dict(
         carton=0,
@@ -45,7 +48,7 @@ def getDecode():
     return decoder
 
 
-# Captures a picture using the Picamera and returns a 224x224 pixel image
+# Captures a picture using the Picamera and returns the original image with a 224x224 pixel image tat our model can use.
 def getPicture(camera):
     return_value, image = camera.read()
     imageResize = np.array(cv2.resize(image, (224, 224)))
@@ -54,6 +57,7 @@ def getPicture(camera):
     del (camera)
     return input, image
 
+# Runs the VGG16 model and converts predictions to one of our 3 results: blue, black or unknown.
 def getPrediction(model, image, decoder):
     yhat = model.predict(image)
     # convert the probabilities to class labels
@@ -64,15 +68,14 @@ def getPrediction(model, image, decoder):
             prediction = decoder[label[0][i][1]]
             break
         except:
-            if i == 5:
-                print("Failed to make Prediction")
-                prediction = 3
-                break
+            prediction = 2
     return prediction
 
-def showVid():
+# Runs the camera
+def showVid(VGG16_Model):
     cv2.namedWindow("preview")
     vc = cv2.VideoCapture(0)
+    decoder = getDecode()
 
     if vc.isOpened():  # try to get the first frame
         rval, frame = vc.read()
@@ -87,7 +90,7 @@ def showVid():
             break
         elif key == 27: # press p (80) for picture
             input, raw_image = getPicture(vc)
-            results = getPrediction(model, input, decoder)
+            results = getPrediction(VGG16_Model, input, decoder)
             if results == 0:
                 text = "Black Box"
             elif results == 1:
@@ -101,10 +104,7 @@ def showVid():
     #cv2.destroyWindow("preview")
 
 # Load in the VGG16 model from keras
-print("Loading Keras' VGG16 model")
+print("Loading Keras' VGG16 model.")
 model = VGG16()
 # Load in the decoder to translate VGG16 predictions to our predictions
-decoder = getDecode()
-while (True):
-    # os.system('clear') #this doesn't work looking for an alternative
-    showVid()
+showVid(model)
